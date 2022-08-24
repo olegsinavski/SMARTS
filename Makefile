@@ -2,7 +2,7 @@
 test: build-all-scenarios
 	# sstudio uses hash(...) as part of some of its type IDs. To make the tests
 	# repeatable we fix the seed.
-	PYTHONHASHSEED=42 pytest -v \
+	PYTHONPATH=$(PWD) PYTHONHASHSEED=42 pytest -v \
 		--cov=smarts \
 		--doctest-modules \
 		--forked \
@@ -19,9 +19,9 @@ test: build-all-scenarios
 	rm -f .coverage*
 
 .PHONY: sanity-test
-sanity-test: build-all-scenarios
+sanity-test: build-sanity-scenarios
 	./tests/test_setup.py
-	PYTHONHASHSEED=42 pytest -v \
+	PYTHONPATH=$(PWD) PYTHONHASHSEED=42 pytest -v \
 		--doctest-modules \
 		--forked \
 		--dist=loadscope \
@@ -52,7 +52,7 @@ test-memory-growth: build-all-scenarios
 
 .PHONY: test-long-determinism
 test-long-determinism:
-	scl scenario build --clean scenarios/minicity
+	scl scenario build --clean scenarios/sumo/minicity
 	PYTHONHASHSEED=42 pytest -v \
 		--forked \
 		./smarts/env/tests/test_determinism.py::test_long_determinism
@@ -72,6 +72,15 @@ run: build-scenario
 .PHONY: build-all-scenarios
 build-all-scenarios:
 	scl scenario build-all scenarios
+
+.PHONY: build-sumo-scenarios
+build-sumo-scenarios:
+	scl scenario build-all scenarios/sumo
+
+.PHONY: build-sanity-scenarios
+build-sanity-scenarios:
+	scl scenario build --clean scenarios/sumo/loop
+	scl scenario build --clean scenarios/sumo/zoo_intersection
 
 .PHONY: build-scenario
 build-scenario:
@@ -123,6 +132,7 @@ clean:
 	rm -f ./$(scenario)/flamegraph.html
 	rm -f ./$(scenario)/*.rou.xml
 	rm -f ./$(scenario)/*.rou.alt.xml
+	rm -f ./$(scenario)/*.smarts.xml
 	rm -rf ./$(scenario)/traffic
 	rm -rf ./$(scenario)/social_agents
 	rm -f .coverage.*

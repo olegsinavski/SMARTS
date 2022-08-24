@@ -1,7 +1,7 @@
 try:
     import ray
 except Exception as e:
-    from .. import RayException
+    from smarts.core.utils.custom_exceptions import RayException
 
     raise RayException.required_to("stress_sumo.py")
 
@@ -14,7 +14,7 @@ def spawn_sumo(worker_idx, batch_id):
     sumo_sim = SumoTrafficSimulation(headless=True)
 
     scenarios_iterator = Scenario.scenario_variations(
-        ["scenarios/loop"],
+        ["scenarios/sumo/loop"],
         ["Agent007"],
     )
     sumo_sim.setup(Scenario.next(scenarios_iterator, f"{batch_id}-{worker_idx}"))

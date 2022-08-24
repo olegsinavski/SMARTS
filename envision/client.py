@@ -26,9 +26,10 @@ import multiprocessing
 import re
 import time
 import warnings
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import websocket
@@ -39,14 +40,25 @@ from envision.data_formatter import EnvisionDataFormatter, EnvisionDataFormatter
 from smarts.core.utils.file import unpack
 
 
-class JSONEncoder(json.JSONEncoder):
+@dataclass
+class JSONEncodingState:
+    """This class is necessary to ensure that the custom json encoder tries to deserialize the data.
+    This is vital to ensure that non-standard json literals like `Infinity`, `-Infinity`, `NaN` are not added to the output json.
+    """
+
+    data: Any
+
+
+class CustomJSONEncoder(json.JSONEncoder):
     """This custom encoder is to support serializing more complex data from SMARTS
     including numpy arrays, NaNs, and Infinity which don't have standarized handling
     according to the JSON spec.
     """
 
     def default(self, obj):
-        if isinstance(obj, float):
+        if isinstance(obj, JSONEncodingState):
+            return self.default(unpack(obj.data))
+        elif isinstance(obj, (int, float)):
             if np.isposinf(obj):
                 obj = "Infinity"
             elif np.isneginf(obj):
@@ -54,12 +66,16 @@ class JSONEncoder(json.JSONEncoder):
             elif np.isnan(obj):
                 obj = "NaN"
             return obj
-        elif isinstance(obj, list):
+        elif obj is None or isinstance(obj, (str, bool)):
+            return obj
+        elif isinstance(obj, (list, tuple)):
             return [self.default(x) for x in obj]
+        elif isinstance(obj, dict):
+            return {k: self.default(v) for k, v in obj.items()}
         elif isinstance(obj, np.bool_):
-            return super().encode(bool(obj))
+            return bool(obj)
         elif isinstance(obj, np.ndarray):
-            return self.default(obj.tolist())
+            return [self.default(x) for x in obj]
 
         return super().default(obj)
 
@@ -90,7 +106,9 @@ class Client:
         self._envision_state_filter = (
             envision_state_filter or EnvisionStateFilter.default()
         )
-        self._data_formatter_args = data_formatter_args
+        self._data_formatter_args = data_formatter_args or EnvisionDataFormatterArgs(
+            "default"
+        )
 
         current_time = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-4]
         client_id = current_time
@@ -160,8 +178,7 @@ class Client:
                         data_formatter.reset()
                         data_formatter.add(state)
                         state = data_formatter.resolve()
-                    state = unpack(state)
-                    state = json.dumps(state, cls=JSONEncoder)
+                    state = json.dumps(JSONEncodingState(state), cls=CustomJSONEncoder)
 
                 f.write(f"{state}\n")
 
@@ -173,6 +190,7 @@ class Client:
         wait_between_retries: float = 0.5,
     ):
         """Send a pre-recorded envision simulation to the envision server."""
+
         client = Client(
             endpoint=endpoint,
             wait_between_retries=wait_between_retries,
@@ -200,14 +218,13 @@ class Client:
             data_formatter = EnvisionDataFormatter(data_formatter_args)
 
         def optionally_serialize_and_write(state: Union[types.State, str], ws):
-            if data_formatter:
-                data_formatter.reset()
-                data_formatter.add(state)
-                state = data_formatter.resolve()
             # if not already serialized
             if not isinstance(state, str):
-                state = unpack(state)
-                state = json.dumps(state, cls=JSONEncoder)
+                if data_formatter:
+                    data_formatter.reset()
+                    data_formatter.add(state)
+                    state = data_formatter.resolve()
+                state = json.dumps(JSONEncodingState(state), cls=CustomJSONEncoder)
 
             ws.send(state)
 

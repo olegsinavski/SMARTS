@@ -18,10 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 import logging
+import math
 import random as rand
 from collections import defaultdict
 from dataclasses import dataclass, replace
-from typing import Dict, Sequence, Set
+from typing import Dict, List, Sequence, Set
 
 from shapely.geometry import Polygon
 
@@ -29,7 +30,7 @@ from smarts.core.coordinates import Point as MapPoint
 from smarts.core.plan import Mission, Plan, Start, default_entry_tactic
 from smarts.core.utils.math import clip, squared_dist
 from smarts.core.vehicle import Vehicle
-from smarts.sstudio.types import MapZone, TrapEntryTactic
+from smarts.sstudio.types import MapZone, PositionalZone, TrapEntryTactic
 
 
 @dataclass
@@ -51,11 +52,14 @@ class Trap:
 
     def ready(self, sim_time: float):
         """If the trap is ready to capture a vehicle."""
-        return self.activation_time <= sim_time
+        return self.activation_time < sim_time or math.isclose(
+            self.activation_time, sim_time
+        )
 
     def patience_expired(self, sim_time: float):
         """If the trap has expired and should no longer capture a vehicle."""
-        return self.activation_time + self.patience <= sim_time
+        expiry_time = self.activation_time + self.patience
+        return expiry_time < sim_time or math.isclose(expiry_time, sim_time)
 
     def includes(self, vehicle_id: str):
         """Returns if the given actor should be considered for capture."""
@@ -162,16 +166,16 @@ class TrapManager:
         if not sim.agent_manager.pending_agent_ids:
             return
 
-        social_vehicle_ids = [
+        social_vehicle_ids: List[str] = [
             v_id
             for v_id in sim.vehicle_index.social_vehicle_ids()
             if not sim.vehicle_index.vehicle_is_shadowed(v_id)
         ]
-        vehicles = {
+        vehicles: Dict[str, Vehicle] = {
             v_id: sim.vehicle_index.vehicle_by_id(v_id) for v_id in social_vehicle_ids
         }
 
-        def largest_vehicle_plane_dimension(vehicle):
+        def largest_vehicle_plane_dimension(vehicle: Vehicle):
             return max(*vehicle.chassis.dimensions.as_lwh[:2])
 
         vehicle_comp = [
@@ -203,7 +207,7 @@ class TrapManager:
                 if not trap.includes(v_id):
                     continue
 
-                vehicle = vehicles[v_id]
+                vehicle: Vehicle = vehicles[v_id]
                 point = vehicle.pose.point.as_shapely
 
                 if not point.within(trap.geometry):
@@ -267,7 +271,7 @@ class TrapManager:
                 continue
             if vehicle == None:
                 continue
-            sim.create_vehicle_in_providers(vehicle, agent_id)
+            sim.create_vehicle_in_providers(vehicle, agent_id, True)
             agents_given_vehicle.add(agent_id)
             used_traps.append((agent_id, trap))
 
@@ -321,35 +325,38 @@ class TrapManager:
 
         if default_entry_speed is None:
             n_lane = road_map.nearest_lane(mission.start.point)
-            assert n_lane, "mission must start in a lane"
-            default_entry_speed = n_lane.speed_limit
+            default_entry_speed = n_lane.speed_limit if n_lane is not None else 0
 
         if zone is None:
             n_lane = n_lane or road_map.nearest_lane(mission.start.point)
-            assert n_lane, "mission must start in a lane"
-            lane_speed = n_lane.speed_limit
-            start_road_id = n_lane.road.road_id
-            start_lane = n_lane.index
-            lane_length = n_lane.length
-            start_pos = mission.start.position
-            vehicle_offset_into_lane = n_lane.offset_along_lane(
-                MapPoint(x=start_pos[0], y=start_pos[1])
-            )
-            vehicle_offset_into_lane = clip(
-                vehicle_offset_into_lane, 1e-6, lane_length - 1e-6
-            )
+            if n_lane is None:
+                zone = PositionalZone(mission.start.position[:2], size=(3, 3))
+            else:
+                lane_speed = n_lane.speed_limit
+                start_road_id = n_lane.road.road_id
+                start_lane = n_lane.index
+                lane_length = n_lane.length
+                start_pos = mission.start.position
+                vehicle_offset_into_lane = n_lane.offset_along_lane(
+                    MapPoint(x=start_pos[0], y=start_pos[1])
+                )
+                vehicle_offset_into_lane = clip(
+                    vehicle_offset_into_lane, 1e-6, lane_length - 1e-6
+                )
 
-            drive_distance = lane_speed * default_zone_dist
+                drive_distance = lane_speed * default_zone_dist
 
-            start_offset_in_lane = vehicle_offset_into_lane - drive_distance
-            start_offset_in_lane = clip(start_offset_in_lane, 1e-6, lane_length - 1e-6)
-            length = max(1e-6, vehicle_offset_into_lane - start_offset_in_lane)
+                start_offset_in_lane = vehicle_offset_into_lane - drive_distance
+                start_offset_in_lane = clip(
+                    start_offset_in_lane, 1e-6, lane_length - 1e-6
+                )
+                length = max(1e-6, vehicle_offset_into_lane - start_offset_in_lane)
 
-            zone = MapZone(
-                start=(start_road_id, start_lane, start_offset_in_lane),
-                length=length,
-                n_lanes=1,
-            )
+                zone = MapZone(
+                    start=(start_road_id, start_lane, start_offset_in_lane),
+                    length=length,
+                    n_lanes=1,
+                )
 
         trap = Trap(
             geometry=zone.to_geometry(road_map),
