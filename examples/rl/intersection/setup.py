@@ -20,7 +20,6 @@ setup(
         "setuptools>=41.0.0,!=50.0",
         "protobuf==3.20.1",
         "ruamel.yaml==0.17.17",
-        "smarts[camera-obs]==0.6.1rc1",
         "stable-baselines3==1.4.0",
         "tensorboard==2.2.0",
     ],
