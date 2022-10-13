@@ -213,10 +213,12 @@ class WebClientRunLoop:
         async def run_loop():
             frame_ptr = None
             # wait until we have a start_frame...
+            self._log.debug("Waiting for first frame.")
             while frame_ptr is None:
                 time.sleep(self._message_wait_time)
                 frame_ptr = self._frames.start_frame
                 frames_to_send = [frame_ptr]
+            self._log.debug("First frame ready.")
 
             while True:
                 # Handle seek
@@ -261,6 +263,7 @@ class WebClientRunLoop:
             self._client.write_message(json.dumps(frames_formatted))
             return False
         except WebSocketClosedError:
+            self._log.debug("Web client push loop ended.")
             return True
 
     def _calculate_frame_delay(self, frame_ptr):
@@ -453,8 +456,8 @@ class ModelFileHandler(FileHandler):
                 "coach.glb": "coach.glb",
                 "truck.glb": "truck.glb",
                 "trailer.glb": "trailer.glb",
-                "pedestrian.glb": "pedestrian.glb",
                 "motorcycle.glb": "motorcycle.glb",
+                "pedestrian.glb": "pedestrian.glb",
             }
         )
 
@@ -480,6 +483,7 @@ class MainHandler(tornado.web.RequestHandler):
 
 def make_app(scenario_dirs: Sequence, max_capacity_mb: float, debug: bool):
     """Create the envision web server application through composition of services."""
+
     with pkg_resources.path(web_dist, ".") as dist_path:
         return tornado.web.Application(
             [

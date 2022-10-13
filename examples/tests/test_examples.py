@@ -1,3 +1,4 @@
+import sys
 import tempfile
 from pathlib import Path
 
@@ -5,6 +6,9 @@ import psutil
 import pytest
 
 from smarts.core.utils import import_utils
+
+# necessary to import default_argument_parser properly in the examples
+sys.path.insert(0, str(Path(__file__).parents[1]))
 
 import_utils.import_module_from_file(
     "examples", Path(__file__).parents[1] / "__init__.py"
@@ -25,7 +29,7 @@ def test_examples(example):
         from examples import multi_agent as current_example
     main = current_example.main
     main(
-        scenarios=["scenarios/loop"],
+        scenarios=["scenarios/sumo/loop"],
         headless=True,
         num_episodes=1,
         max_episode_steps=100,
@@ -38,8 +42,8 @@ def test_ray_multi_instance_example():
     main = ray_multi_instance.main
     num_cpus = max(2, min(10, (psutil.cpu_count(logical=False) - 1)))
     main(
-        training_scenarios=["scenarios/loop"],
-        evaluation_scenarios=["scenarios/loop"],
+        training_scenarios=["scenarios/sumo/loop"],
+        evaluation_scenarios=["scenarios/sumo/loop"],
         sim_name=None,
         headless=True,
         num_episodes=1,
@@ -54,7 +58,7 @@ def test_rllib_example():
     main = rllib.main
     with tempfile.TemporaryDirectory() as result_dir, tempfile.TemporaryDirectory() as model_dir:
         main(
-            scenario="scenarios/loop",
+            scenario="scenarios/sumo/loop",
             headless=True,
             time_total_s=20,
             rollout_fragment_length=200,

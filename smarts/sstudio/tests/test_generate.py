@@ -27,7 +27,7 @@ from xml.etree.ElementTree import ElementTree
 import pytest
 
 from smarts.core.scenario import Scenario
-from smarts.sstudio import gen_map, gen_missions, gen_traffic
+from smarts.sstudio import gen_map, gen_traffic
 from smarts.sstudio.types import (
     Distribution,
     Flow,
@@ -82,21 +82,30 @@ def missions() -> Sequence[Mission]:
 def test_generate_traffic(traffic: Traffic):
     with tempfile.TemporaryDirectory() as temp_dir:
         gen_traffic(
-            "scenarios/intersections/4lane_t",
+            "scenarios/sumo/intersections/4lane_t",
             traffic,
             output_dir=temp_dir,
             name="generated",
         )
 
-        with open("smarts/sstudio/tests/baseline.rou.xml") as f:
-            items = [x.items() for x in ElementTree(file=f).iter()]
+        _compare_files(
+            "smarts/sstudio/tests/baseline.rou.xml",
+            os.path.join(temp_dir, "traffic", "generated.rou.xml"),
+        )
 
-        with open(os.path.join(temp_dir, "traffic", "generated.rou.xml")) as f:
-            generated_items = [x.items() for x in ElementTree(file=f).iter()]
 
-        print(sorted(items))
-        print(sorted(generated_items))
-        assert sorted(items) == sorted(generated_items)
+def _compare_files(file1, file2):
+    with open(file1) as f:
+        items = [x.items() for x in ElementTree(file=f).iter()]
+
+    with open(file2) as f:
+        generated_items = [x.items() for x in ElementTree(file=f).iter()]
+
+    sorted_items = sorted(items)
+    sorted_generated_items = sorted(generated_items)
+    if not sorted_items == sorted_generated_items:
+        for a, b in zip(sorted_items, sorted_generated_items):
+            assert a == b, f"{file1} is different than {file2}"
 
 
 def _gen_map_from_spec(scenario_root: str, map_spec: MapSpec):
@@ -109,7 +118,7 @@ def _gen_map_from_spec(scenario_root: str, map_spec: MapSpec):
 
 
 def test_generate_sumo_map():
-    scenario_root = "scenarios/intersections/4lane_t"
+    scenario_root = "scenarios/sumo/intersections/4lane_t"
     map_file = "map.net.xml"
 
     map_path = os.path.join(scenario_root, map_file)
@@ -130,7 +139,7 @@ def test_generate_sumo_map():
 
 
 def test_generate_od_map():
-    scenario_root = "scenarios/od_4lane"
+    scenario_root = "scenarios/open_drive/od_4lane"
     map_file = "map.xodr"
 
     map_path = os.path.join(scenario_root, map_file)

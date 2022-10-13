@@ -14,7 +14,7 @@ try:
     from ray.rllib.models import ModelCatalog
     from ray.rllib.utils import try_import_tf
 except Exception as e:
-    from .. import RayException
+    from smarts.core.utils.custom_exceptions import RayException
 
     raise RayException.required_to("regression_rllib.py")
 
@@ -35,6 +35,7 @@ class RLlibTFSavedModelAgent(Agent):
     def __init__(self, path_to_model, observation_space):
         self._prep = ModelCatalog.get_preprocessor_for_space(observation_space)
         self._path_to_model = path_to_model
+        self._sess = None
 
     def setup(self):
         self._sess = tf.compat.v1.Session(graph=tf.Graph())
@@ -44,11 +45,14 @@ class RLlibTFSavedModelAgent(Agent):
         )
 
     def act(self, obs):
+        assert self._sess is not None, f"You must call {self.setup.__name__} first."
         obs = self._prep.transform(obs)
         graph = tf.compat.v1.get_default_graph()
         # These tensor names were found by inspecting the trained model
         output_node = graph.get_tensor_by_name("default_policy/add:0")
         input_node = graph.get_tensor_by_name("default_policy/observation:0")
+        if not self._sess:
+            return []
         res = self._sess.run(output_node, feed_dict={input_node: [obs]})
         action = res[0]
         return action
@@ -79,7 +83,8 @@ def run_experiment(log_path, experiment_name, training_iteration=100):
     model_path = Path(__file__).parent / "model"
     agent_spec = AgentSpec(
         interface=AgentInterface.from_type(AgentType.Standard, max_episode_steps=5000),
-        policy=RLlibTFSavedModelAgent(
+        agent_builder=RLlibTFSavedModelAgent,
+        agent_params=(
             model_path.absolute(),
             OBSERVATION_SPACE,
         ),
@@ -97,7 +102,7 @@ def run_experiment(log_path, experiment_name, training_iteration=100):
         )
     }
 
-    scenario_path = Path(__file__).parent / "../../scenarios/loop"
+    scenario_path = Path(__file__).parent / "../../scenarios/sumo/loop"
     scenario_path = str(scenario_path.absolute())
 
     tune_confg = {
