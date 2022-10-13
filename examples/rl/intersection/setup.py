@@ -22,6 +22,6 @@ setup(
         "ruamel.yaml==0.17.17",
         "smarts[camera-obs] @ git+https://github.com/huawei-noah/SMARTS.git@intersection-v0",
         "stable-baselines3==1.4.0",
-        "tensorboard==2.2.0",
+        "tensorboard==2.9.1",
     ],
 )
