@@ -18,6 +18,7 @@ Copy and pasting the git commit messages is __NOT__ enough.
 - Added "SMARTS Performance Diagnostic" development tool for evaluating the simulation performance.
 - Added a "All Simulation" button on the header of Envision and made small-windowed simulation(s) in the "All Simulations" page clickable to maximize.
 - An env wrapper `Metrics` is introduced to compute agents' performance metrics.
+- Traffic light signals can now be configured through `Signals.include_foes` to include foe signals (signals of lanes that cross the current lane.)
 ### Deprecated
 ### Changed
 ### Removed
