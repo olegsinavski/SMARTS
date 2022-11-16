@@ -60,6 +60,12 @@ Types
     * `road_id` - The road id this `ViaPoint` is associated with
     * `required_speed` - The rough minimum speed required to collect this `ViaPoint`
 * `Vias` - A listing of nearby `ViaPoint` and `ViaPoint` collected in the last step
+* `SignalLightState` - Signal light flag describing the following traffic states [`UNKNOWN = 0`, `OFF = 0`, `STOP = 1`, `CAUTION = 2`, `GO = 4`, `FLASHING = 8`, `ARROW = 16`]
+* `SignalObservation` - Information describing stationary traffic control feature that uses signals like stop-lights and stop-signs.
+    * `state` - A `SignalLightState` describing the current advance state given by a traffic control feature.
+    * `stop_point` - The `Point` at which the vehicle is required to respect the traffic control feature.
+    * `controlled_lanes` - The lanes that this signal dictates to.
+    * `last_changed` - The last time that this signal has changed state.
 
 --------
 Features
@@ -97,6 +103,7 @@ Features
 * `road_waypoints` (Optional) - A collection of `Waypoint` near the ego vehicle representing a `Waypoint` approximation of nearby lane centers.
     * `lanes` - The representation of each lane represented by `Waypoint`. Each item is list of `Waypoint`.
 * `via_data` - A `Vias` describing collectable points the agent can visit.
+* `signals` - A list of `SignalObservation` describing traffic signals.
 
 See implementation in :class:`smarts.core.sensors`
 
