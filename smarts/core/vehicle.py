@@ -568,7 +568,10 @@ class Vehicle:
             lookahead = agent_interface.signals.lookahead
             vehicle.attach_signals_sensor(
                 SignalsSensor(
-                    vehicle=vehicle, road_map=sim.road_map, lookahead=lookahead
+                    vehicle=vehicle,
+                    road_map=sim.road_map,
+                    lookahead=lookahead,
+                    include_foes=agent_interface.include_foes,
                 )
             )
 
