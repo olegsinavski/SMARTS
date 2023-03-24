@@ -139,6 +139,9 @@ class HiWayEnvV1(gym.Env):
             for how the formatting matches the action space. String version
             can be used instead. See :class:`ActionOptions`. Defaults to
             :attr:`ActionOptions.default`.
+        step_return_type (StepReturn, string): This configures between the environment
+            status return (i.e. reward means the environment reward) and the per-agent
+            status return (i.e. rewards means reward per agent).
     """
 
     metadata = {"render_modes": ["human"]}
