@@ -10,7 +10,9 @@ Copy and pasting the git commit messages is __NOT__ enough.
 
 ## [Unreleased]
 ### Added
+- `hiway-v1` can now be configured for per-agent or environment reward(s), truncation(s), and termination(s) through `step_return_type`.
 ### Changed
+- `hiway-v1`'s `observation_options` no longer has an effect on the environment rewards, truncations, and terminations shapes.
 ### Deprecated
 ### Fixed
 - Fixed "rl/racing" `numpy` incompatibility.
