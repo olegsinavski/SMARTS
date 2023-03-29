@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, FrozenSet, List, Set
 
 from cached_property import cached_property
 
@@ -58,7 +58,7 @@ class SimulationFrame:
     sensor_states: Any
     # TODO MTA: renderer can be allowed here as long as it is only type information
     # renderer_type: Any = None
-    _collision_filter: Set[str] = None
+    _collision_filter: FrozenSet[str] = frozenset()
 
     @cached_property
     def agent_ids(self) -> Set[str]:
