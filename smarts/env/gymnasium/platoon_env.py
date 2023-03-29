@@ -187,10 +187,10 @@ def resolve_agent_interface(agent_interface: AgentInterface):
         #         )
         #     ]
         # ),
-        actors_alive = ActorsAliveDoneCriteria(
-            actors_of_interest="social-agent-leader-Leader-007",
+        actors_alive=ActorsAliveDoneCriteria(
+            actors_of_interest="Leader-007",
             strict=True,
-        )
+        ),
     )
     max_episode_steps = 1000
     waypoints_lookahead = 80
