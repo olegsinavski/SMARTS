@@ -43,9 +43,9 @@ class BulletSimulation(PhysicsSimulation):
     def __init__(self) -> None:
         gui: str = config()("bullet", "gui", default="OFF", cast=lambda s: s.upper())
 
-        self._bullet_mode = pybullet.pybullet.DIRECT  # pylint: disable=no-member
+        self._bullet_mode = pybullet.DIRECT  # pylint: disable=no-member
         if gui == "LINUX":
-            self._bullet_mode == pybullet.GUI  # pylint: disable=no-member
+            self._bullet_mode = pybullet.GUI  # pylint: disable=no-member
         # For macOS GUI. See our `BulletClient` docstring for details.
         if gui == "MAC":
             from smarts.bullet.bullet import BulletClient
