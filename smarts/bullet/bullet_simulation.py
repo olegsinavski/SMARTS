@@ -51,8 +51,8 @@ class BulletSimulation(PhysicsSimulation):
             from smarts.bullet.bullet import BulletClient
 
             self._bullet_client = BulletClient(
-                pybullet.GUI
-            )  # pylint: disable=no-member
+                pybullet.GUI  # pylint: disable=no-member
+            )
         else:
             self._bullet_client = bc.BulletClient(
                 self._bullet_mode  # pylint: disable=no-member
