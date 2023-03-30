@@ -35,6 +35,8 @@ from smarts.core.plan import Plan
 from smarts.core.simulation_local_constants import SimulationLocalConstants
 from smarts.core.utils.logging import timeit
 
+from ..bullet import pybullet
+from ..bullet.pybullet import bullet_client as bc
 from . import config, models
 from .actor import ActorRole, ActorState
 from .agent_interface import AgentInterface
@@ -61,10 +63,8 @@ from .simulation_frame import SimulationFrame
 from .traffic_history_provider import TrafficHistoryProvider
 from .traffic_provider import TrafficProvider
 from .trap_manager import TrapManager
-from ..bullet import pybullet
 from .utils.id import Id
 from .utils.math import rounder_for_dt
-from ..bullet.pybullet import bullet_client as bc
 from .utils.visdom_client import VisdomClient
 from .vehicle import Vehicle
 from .vehicle_index import VehicleIndex
