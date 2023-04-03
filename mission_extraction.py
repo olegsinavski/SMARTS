@@ -13,12 +13,18 @@ if __name__ == "__main__":
         help="The path to a raw scenario.",
         type=str,
     )
+    parser.add_argument(
+        "output_dir",
+        help="The path to store the scenario.",
+        type=str,
+    )
     args = parser.parse_args()
 
     # Create scenario
     scenario_id = args.scenario.split("/")[-1]
     scenario_local_path = "/root/argoverse/train/train/"
-    scenario_dir = f"scenarios/argoverse/{scenario_id}"
+    scenario_dir = f"{args.output_dir}/{scenario_id}"
+    print(scenario_dir)
     os.mkdir(scenario_dir)
     filename = "scenario.py"
     with open(os.path.join(scenario_dir, filename), "w") as f:
