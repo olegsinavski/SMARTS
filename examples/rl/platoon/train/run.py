@@ -64,20 +64,13 @@ def main(args: argparse.Namespace):
         raise KeyError(f"Expected 'train' or 'evaluate', but got {config.mode}.")
 
     # Make agent specification
-    agent_spec = registry.make(
-        locator=config.agent_locator,
-        agent_params={
-            "config": config,
-        },
-    )
+    agent_spec = registry.make(locator=config.agent_locator)
 
     # Make training and evaluation environments.
     envs_train = {}
     envs_eval = {}
     for scenario in config.scenarios:
-        scenario_path = str(
-            Path(__file__).resolve().parents[4] / "scenarios" / scenario
-        )
+        scenario_path = str(Path(__file__).resolve().parents[4] / scenario)
         envs_train[f"{scenario}"] = make_env(
             env_id=config.env_id,
             scenario=scenario_path,
