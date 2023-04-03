@@ -28,17 +28,19 @@ leader = TrafficActor(
 route_opt = [
     (0, 0),
     (1, 1),
+    (0, 1),
+    (1, 0),
 ]
 
-# Traffic combinations = 3C2 + 3C3 = 3 + 1 = 4
-# Repeated traffic combinations = 4 * 100 = 400
+# Traffic combinations = 4C2 + 4C3 + 4C4 = 6 + 4 + 1 = 11
+# Repeated traffic combinations = 11 * 10 = 110
 min_flows = 2
-max_flows = 2
+max_flows = 4
 route_comb = [
     com
     for elems in range(min_flows, max_flows + 1)
     for com in combinations(route_opt, elems)
-] * 10
+] * 10 
 
 traffic = {}
 for name, routes in enumerate(route_comb):
