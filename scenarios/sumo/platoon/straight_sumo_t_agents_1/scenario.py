@@ -47,11 +47,11 @@ for name, routes in enumerate(route_comb):
         flows=[
             Flow(
                 route=Route(
-                    begin=("E0", r[0], 30),
+                    begin=("E0", r[0], 0),
                     end=("E0", r[1], "max"),
                 ),
                 # Random flow rate, between x and y vehicles per minute.
-                rate=60 * random.uniform(10, 15),
+                rate=60 * random.uniform(5, 10),
                 # Random flow start time, between x and y seconds.
                 begin=random.uniform(0, 5),
                 # For an episode with maximum_episode_steps=3000 and step
@@ -68,7 +68,7 @@ for name, routes in enumerate(route_comb):
             Trip(
                 vehicle_name="Leader-007",
                 route=Route(
-                    begin=("E0", 1, 20),
+                    begin=("E0", 1, 15),
                     end=("E0", 0, "max"),
                 ),
                 depart=19,
