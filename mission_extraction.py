@@ -2,6 +2,7 @@ import argparse
 import os
 import pickle
 import glob
+import subprocess
 from smarts.core.sensors import EgoVehicleObservation
 from smarts.dataset import traffic_histories_to_observations
 from smarts.sstudio.scenario_construction import build_scenario
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     # Create scenario
     scenario_id = args.scenario.split("/")[-1]
     scenario_local_path = "/root/argoverse/train/train/"
-    scenario_dir = f"{args.output_dir}/{scenario_id}"
+    scenario_dir = f"{args.output_dir}/{scenario_id}_agents_1"
     print(scenario_dir)
     os.mkdir(scenario_dir)
     filename = "scenario.py"
@@ -128,3 +129,5 @@ gen_scenario(
 )
 """
         )
+
+subprocess.run(["scl", "run", "--envision", "examples/egoless.py", f"{scenario_dir}"])
