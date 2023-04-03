@@ -62,7 +62,22 @@ class Data:
 
 
 class Score(NamedTuple):
-    """This describes the final score given by processing observations through the metrics."""
+    """Describes the final score given by processing observations through the metrics.
+    
+        +-------------+--------+-----------------------------------------------------------------------------------------------------+
+        |             | Range  | Remarks                                                                                             |
+        +=============+========+=====================================================================================================+
+        | Overall     | [0, 1] | Total score which combines "Completion", "Time", "Humanness", and "Rules". The higher, the better.  |
+        +-------------+--------+-----------------------------------------------------------------------------------------------------+
+        | Completion  | [0, 1] | Proportion of scenarios tasks completed. The higher, the better.                                    |
+        +-------------+--------+-----------------------------------------------------------------------------------------------------+
+        | Time        | [0, 1] | Time taken to complete scenario. The lower, the better.                                             |
+        +-------------+--------+-----------------------------------------------------------------------------------------------------+
+        | Humanness   | [0, 1] | Humanness indicator. The higher, the better.                                                        |
+        +-------------+--------+-----------------------------------------------------------------------------------------------------+
+        | Rules       | [0, 1] | Traffic rules compliance. The higher, the better.                                                   |
+        +-------------+--------+-----------------------------------------------------------------------------------------------------+    
+    """
 
     completion: float
     humanness: float
@@ -102,8 +117,10 @@ class MetricsBase(gym.Wrapper):
             return result
 
         dones = {"__all__": False}
+        # Caters to environments which return multi-agent observation
         if isinstance(terminated, dict):
             dones = {k: v or truncated[k] for k, v in terminated.items()}
+        # Caters to environments which return single-agent observation
         elif isinstance(terminated, bool):
             if terminated or truncated:
                 dones["__all__"] = True
@@ -185,9 +202,9 @@ class MetricsBase(gym.Wrapper):
         self._cur_agents = set(self.env.agent_interfaces.keys())
         self._steps = dict.fromkeys(self._cur_agents, 0)
         self._done_agents = set()
-        self._scen = self.env.scenario
-        self._scen_name = self.env.scenario.name
-        self._road_map = self.env.scenario.road_map
+        self._scen = self.env.smarts.scenario
+        self._scen_name = self.env.smarts.scenario.name
+        self._road_map = self.env.smarts.scenario.road_map
 
         # fmt: off
         if self._scen_name not in self._records:
@@ -250,19 +267,6 @@ class MetricsBase(gym.Wrapper):
         "Humanness", "Rules", and one total combined score named "Overall"
         on the wrapped environment.
 
-        +-------------+--------+-----------------------------------------------------------------------------------------------------+
-        |             | Range  | Remarks                                                                                             |
-        +=============+========+=====================================================================================================+
-        | Overall     | [0, 1] | Total score which combines "Completion", "Time", "Humanness", and "Rules". The higher, the better.  |
-        +-------------+--------+-----------------------------------------------------------------------------------------------------+
-        | Completion  | [0, 1] | Proportion of scenarios tasks completed. The higher, the better.                                    |
-        +-------------+--------+-----------------------------------------------------------------------------------------------------+
-        | Time        | [0, 1] | Time taken to complete scenario. The lower, the better.                                             |
-        +-------------+--------+-----------------------------------------------------------------------------------------------------+
-        | Humanness   | [0, 1] | Humanness indicator. The higher, the better.                                                        |
-        +-------------+--------+-----------------------------------------------------------------------------------------------------+
-        | Rules       | [0, 1] | Traffic rules compliance. The higher, the better.                                                   |
-        +-------------+--------+-----------------------------------------------------------------------------------------------------+
 
         Returns:
             Dict[str, float]: Contains "Overall", "Completion", "Time",
@@ -303,17 +307,19 @@ class MetricsBase(gym.Wrapper):
 
 
 class Metrics(gym.Wrapper):
-    """Metrics class wraps an underlying _Metrics class. The underlying
-    _Metrics class computes agents' performance metrics in a SMARTS
+    """Metrics class wraps an underlying MetricsBase class. The underlying
+    MetricsBase class computes agents' performance metrics in a SMARTS
     environment. Whereas, this Metrics class is a basic gym.Wrapper class
-    which prevents external users from accessing or modifying attributes
-    beginning with an underscore, to ensure security of the metrics computed.
+    which prevents external users from accessing or modifying (i) protected 
+    attributes or (ii) attributes beginning with an underscore, to ensure
+    security of the metrics computed.
 
     Args:
         env (gym.Env): A gym.Env to be wrapped.
 
     Raises:
-        AttributeError: Upon accessing an attribute beginning with an underscore.
+        AttributeError: Upon accessing (i) a protected attribute or (ii) an 
+        attribute beginning with an underscore.
 
     Returns:
         gym.Env: A wrapped gym.Env which computes agents' performance metrics.
@@ -322,6 +328,17 @@ class Metrics(gym.Wrapper):
     def __init__(self, env: gym.Env):
         env = MetricsBase(env)
         super().__init__(env)
+
+    def __getattr__(self, name: str):
+        """Returns an attribute with ``name``, unless ``name`` starts with an underscore."""
+        if name == "_np_random":
+            raise AttributeError(
+                "Can't access `_np_random` of a wrapper, use `self.unwrapped._np_random` or `self.np_random`."
+            )
+        elif name.startswith("_") or name in ["smarts",]:
+            raise AttributeError(f"accessing private attribute '{name}' is prohibited")
+        
+        return getattr(self.env, name)
 
 
 def _check_env(env: gym.Env):
