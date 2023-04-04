@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # Create scenario
     scenario_id = args.scenario.split("/")[-1]
-    scenario_local_path = "/root/argoverse/train/train/"
+    scenario_local_path = "/home/kyber/argoverse/"
     scenario_dir = f"{args.output_dir}/{scenario_id}_agents_1"
     print(scenario_dir)
     os.mkdir(scenario_dir)
@@ -137,7 +137,7 @@ subprocess.run(
         "scl",
         "run",
         "--envision",
-        "/root/SMARTS/examples/control/laner.py",
+        "examples/control/laner.py",
         f"{scenario_dir}",
     ]
 )
