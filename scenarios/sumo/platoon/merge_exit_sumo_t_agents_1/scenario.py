@@ -28,12 +28,13 @@ leader = TrafficActor(
 route_opt = [
     (0, 0),
     (1, 1),
+    (2, 2),
 ]
 
 # Traffic combinations = 3C2 + 3C3 = 3 + 1 = 4
 # Repeated traffic combinations = 4 * 100 = 400
 min_flows = 2
-max_flows = 2
+max_flows = 3
 route_comb = [
     com
     for elems in range(min_flows, max_flows + 1)
@@ -47,11 +48,11 @@ for name, routes in enumerate(route_comb):
         flows=[
             Flow(
                 route=Route(
-                    begin=("E0", r[0], 20),
-                    end=("E0", r[1], "max"),
+                    begin=("E1", r[0], 0),
+                    end=("E3", r[1], "max"),
                 ),
                 # Random flow rate, between x and y vehicles per minute.
-                rate=60 * random.uniform(15, 20),
+                rate=60 * random.uniform(5, 10),
                 # Random flow start time, between x and y seconds.
                 begin=random.uniform(0, 5),
                 # For an episode with maximum_episode_steps=3000 and step
@@ -68,8 +69,8 @@ for name, routes in enumerate(route_comb):
             Trip(
                 vehicle_name="Leader-007",
                 route=Route(
-                    begin=("E0", 1, 25),
-                    end=("E0", 0, "max"),
+                    begin=("E0", 2, 15),
+                    end=("E4", 0, "max"),
                 ),
                 depart=20,
                 actor=leader,
@@ -81,7 +82,7 @@ for name, routes in enumerate(route_comb):
 
 ego_missions = [
     EndlessMission(
-        begin=("E0", 1, 5), start_time=20
+        begin=("E0", 2, 5), start_time=20
     )  # Delayed start, to ensure road has prior traffic.
 ]
 
