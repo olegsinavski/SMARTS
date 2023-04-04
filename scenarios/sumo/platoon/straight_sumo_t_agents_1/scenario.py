@@ -22,7 +22,6 @@ normal = TrafficActor(
 )
 leader = TrafficActor(
     name="Leader-007",
-    depart_speed=0,
 )
 # flow_name = (start_lane, end_lane,)
 route_opt = [
@@ -40,7 +39,7 @@ route_comb = [
     com
     for elems in range(min_flows, max_flows + 1)
     for com in combinations(route_opt, elems)
-] * 10 
+] * 10
 
 traffic = {}
 for name, routes in enumerate(route_comb):

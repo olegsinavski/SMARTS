@@ -19,6 +19,9 @@ if __name__ == "__main__":
         help="The path to store the scenario.",
         type=str,
     )
+    parser.add_argument(
+        "vehicle_id", help="The id of vehicle of interest", type=int, nargs="*"
+    )
     args = parser.parse_args()
 
     # Create scenario
@@ -69,8 +72,7 @@ gen_scenario(
         start_time=None,
         end_time=None,
     )
-    recorder.collect(vehicles_with_sensors=None, headless=True)
-
+    recorder.collect(vehicles_with_sensors=args.vehicle_id, headless=True)
     # Load pickle file of observations
     datafile = glob.glob(f"{scenario_dir}/*.pkl")[0]
     with open(datafile, "rb") as pf:
@@ -130,4 +132,12 @@ gen_scenario(
 """
         )
 
-subprocess.run(["scl", "run", "--envision", "examples/egoless.py", f"{scenario_dir}"])
+subprocess.run(
+    [
+        "scl",
+        "run",
+        "--envision",
+        "/root/SMARTS/examples/control/laner.py",
+        f"{scenario_dir}",
+    ]
+)

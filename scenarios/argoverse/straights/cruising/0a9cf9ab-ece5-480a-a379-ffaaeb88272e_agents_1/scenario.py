@@ -8,15 +8,16 @@ from smarts.sstudio import types as t
 # ├── log_map_archive_{scenario_id}.json
 # └── scenario_{scenario_id}.parquet
 
-scenario_id = "00b635f9-ee79-43f7-91c2-005e7b772c28"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
+scenario_id = "0a9cf9ab-ece5-480a-a379-ffaaeb88272e"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
 scenario_path = Path("/root/argoverse/train/train/") / scenario_id  # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 ego_mission = [
     t.Mission(
         t.Route(
-            begin=("road-331939615-331939827", 0, 0.2),
-            end=("road-331940159-331939981-331940027", 0, 19.4),
-        )
+            begin=("road-431066631-431066806", 1, 23.4),
+            end=("road-431067017-431066779", 1, 24.5),
+        ),
+    entry_tactic=IdEntryTactic(id="58432")
     )
 ]
 

@@ -1,5 +1,5 @@
 import random
-from itertools import combinations
+from itertools import combinations, product
 from pathlib import Path
 
 from smarts.core.colors import Colors
@@ -39,19 +39,19 @@ route_comb = [
     for elems in range(min_flows, max_flows + 1)
     for com in combinations(route_opt, elems)
 ] * 10
-
 traffic = {}
 for name, routes in enumerate(route_comb):
+    print(name, routes)
     traffic[str(name)] = Traffic(
         engine="SUMO",
         flows=[
             Flow(
                 route=Route(
-                    begin=("E0", r[0], 20),
+                    begin=("E0", r[0], 0),
                     end=("E0", r[1], "max"),
                 ),
                 # Random flow rate, between x and y vehicles per minute.
-                rate=60 * random.uniform(15, 20),
+                rate=60 * random.uniform(5, 10),
                 # Random flow start time, between x and y seconds.
                 begin=random.uniform(0, 5),
                 # For an episode with maximum_episode_steps=3000 and step
@@ -68,8 +68,8 @@ for name, routes in enumerate(route_comb):
             Trip(
                 vehicle_name="Leader-007",
                 route=Route(
-                    begin=("E0", 1, 25),
-                    end=("E0", 0, "max"),
+                    begin=("E0", 1, 15),
+                    end=("E_left", 0, "max"),
                 ),
                 depart=20,
                 actor=leader,
