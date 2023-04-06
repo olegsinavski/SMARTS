@@ -10,6 +10,7 @@ from smarts.sstudio.scenario_construction import build_scenario
 
 
 def copy_data_to_smarts_dir(data_local_path):
+    # local use only, please don't push the copied data onto SMARTS repo
     smarts_dir = "argoverse/data"
     scenario_id = data_local_path.split("/")[-2]
     scenario_path = Path(__file__).resolve().parents[0] / smarts_dir / scenario_id
