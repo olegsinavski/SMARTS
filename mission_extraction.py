@@ -8,28 +8,16 @@ from smarts.core.sensors import EgoVehicleObservation
 from smarts.dataset import traffic_histories_to_observations
 from smarts.sstudio.scenario_construction import build_scenario
 
-data_local_path = None
-
 
 def copy_data_to_smarts_dir(data_local_path):
     smarts_dir = "argoverse/data"
     scenario_id = data_local_path.split("/")[-2]
     scenario_path = Path(__file__).resolve().parents[0] / smarts_dir / scenario_id
-    print(data_local_path, scenario_path)
     shutil.copytree(data_local_path, scenario_path, dirs_exist_ok=True)
-    return scenario_id
+    return scenario_id, smarts_dir
 
 
-def create_scenario_file(data_local_path, output_dir):
-    scenario_id = data_local_path.split("/")[-2]
-    scenario_dir = (
-        Path(output_dir.rstrip(args.output_dir[-1])) / f"{scenario_id}_agents_1"
-    )
-    scenario_dir.mkdir(exist_ok=True)
-    return scenario_dir
-
-
-def write_scenario_py(scenario_dir):
+def write_scenario_py(scenario_dir, scenario_id):
     filepath = Path(f"{scenario_dir}/scenario.py")
     with filepath.open("w", encoding="utf-8") as f:
         f.write(
@@ -43,8 +31,9 @@ from smarts.sstudio import types as t
 # ├── log_map_archive_{{scenario_id}}.json
 # └── scenario_{{scenario_id}}.parquet
 
+PATH = "argoverse/data"
 scenario_id = "{scenario_id}"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
-scenario_path = Path("{data_local_path}") / scenario_id  # e.g. Path("/home/user/argoverse/train/") / scenario_id
+scenario_path = Path(__file__).resolve().parents[5] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 traffic_histories = [
     t.TrafficHistoryDataset(
@@ -96,7 +85,8 @@ def generate_route(scenario_dir):
     return first_state, last_state
 
 
-def write_mission_to_scenario(scenario_id, data_local_path, first_state, last_state):
+def write_mission_to_scenario(scenario_dir, scenario_id, first_state, last_state):
+    filepath = Path(f"{scenario_dir}/scenario.py")
     with filepath.open("w", encoding="utf-8") as f:
         f.write(
             f"""from pathlib import Path
@@ -109,8 +99,9 @@ from smarts.sstudio import types as t
 # ├── log_map_archive_{{scenario_id}}.json
 # └── scenario_{{scenario_id}}.parquet
 
+PATH = "argoverse/data"
 scenario_id = "{scenario_id}"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
-scenario_path = Path("{data_local_path}") / scenario_id  # e.g. Path("/home/user/argoverse/train/") / scenario_id
+scenario_path = Path(__file__).resolve().parents[5] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 ego_mission = [
     t.Mission(
@@ -141,6 +132,19 @@ gen_scenario(
         )
 
 
+def main(data_local_path, output_dir, vehicle_id):
+    scenario_id = data_local_path.split("/")[-2]
+    scenario_dir = (
+        Path(output_dir.rstrip(args.output_dir[-1])) / f"{scenario_id}_agents_1"
+    )
+    scenario_dir.mkdir(exist_ok=True)
+    copy_data_to_smarts_dir(data_local_path)
+    write_scenario_py(scenario_dir, scenario_id)
+    generate_pkl(scenario_dir, vehicle_id)
+    first_state, last_state = generate_route(scenario_dir)
+    write_mission_to_scenario(scenario_dir, scenario_id, first_state, last_state)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -158,19 +162,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    def main(data_local_path, output_dir, vehicle_id, scenario_dir):
-        copy_data_to_smarts_dir(data_local_path)
-        create_scenario_file(data_local_path, output_dir)
-        write_scenario_py(scenario_dir)
-        generate_pkl(scenario_dir, vehicle_id)
-        generate_route(scenario_dir)
-        write_mission_to_scenario(scenario_id, data_local_path, first_state, last_state)
-
     main(
         data_local_path=args.scenario,
         output_dir=args.output_dir,
         vehicle_id=args.vehicle_id,
-        scenario_dir=create_scenario_file(data_local_path, output_dir),
     )
 
     exit()
