@@ -14,15 +14,14 @@ from smarts.sstudio.types import (
     TrafficActor,
     EndlessMission,
     ScenarioMetadata,
+    TrapEntryTactic,
 )
 
 normal = TrafficActor(
     name="car",
     speed=Distribution(sigma=0.5, mean=1.0),
 )
-leader = TrafficActor(
-    name="Leader-007",
-)
+leader = TrafficActor(name="Leader-007", depart_speed=0)
 # flow_name = (start_lane, end_lane,)
 route_opt = [
     (0, 0),
@@ -82,7 +81,9 @@ for name, routes in enumerate(route_comb):
 
 ego_missions = [
     EndlessMission(
-        begin=("E0", 1, 5), start_time=20
+        begin=("E0", 1, 5),
+        start_time=20,
+        entry_tactic=TrapEntryTactic(wait_to_hijack_limit_s=0, default_entry_speed=0),
     )  # Delayed start, to ensure road has prior traffic.
 ]
 
