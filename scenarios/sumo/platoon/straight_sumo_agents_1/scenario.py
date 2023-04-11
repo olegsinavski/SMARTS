@@ -12,13 +12,18 @@ from smarts.sstudio.types import (
     Distribution,
     EndlessMission,
     ScenarioMetadata,
+    TrapEntryTactic,
 )
 
-ego_missions = [EndlessMission(begin=("E0", 1, 5))]
+ego_missions = [
+    EndlessMission(
+        begin=("E0", 1, 5),
+        entry_tactic=TrapEntryTactic(wait_to_hijack_limit_s=0.5, default_entry_speed=0),
+    )
+]
 
-traffic_actor = TrafficActor(
-    name="leader",
-    speed=Distribution(sigma=0.5, mean=1),
+leader_actor = TrafficActor(
+    name="leader", speed=Distribution(sigma=0.5, mean=1), depart_speed=0
 )
 traffic = Traffic(
     engine="SUMO",
@@ -27,9 +32,10 @@ traffic = Traffic(
         Trip(
             vehicle_name="Leader-007",
             route=Route(
-                begin=("E0", 1, 20),
+                begin=("E0", 1, 15),
                 end=("E0", 0, "max"),
             ),
+            actor=leader_actor,
         ),
     ],
 )

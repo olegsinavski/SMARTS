@@ -73,7 +73,6 @@ for name, routes in enumerate(route_comb):
                 ),
                 depart=19,
                 actor=leader,
-                vehicle_type="truck",
             ),
         ],
     )
