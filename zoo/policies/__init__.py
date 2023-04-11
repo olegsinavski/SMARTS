@@ -8,10 +8,18 @@ from smarts.core.agent_interface import (
     DoneCriteria,
     Waypoints,
 )
+from smarts.core.agent_interface import (
+    RGB,
+    AgentInterface,
+    AgentType,
+    DoneCriteria,
+    Waypoints,
+)
 from smarts.core.controllers import ActionSpaceType
 from smarts.zoo.agent_spec import AgentSpec
 from smarts.zoo.registry import make, register
 
+from .chase_via_points_agent import ChaseViaPointsAgent
 from .chase_via_points_agent import ChaseViaPointsAgent
 from .keep_lane_agent import KeepLaneAgent
 from .non_interactive_agent import NonInteractiveAgent
@@ -56,6 +64,8 @@ register(
                 on_shoulder=False,
                 wrong_way=False,
                 not_moving=False,
+                agents_alive=None,
+                actors_alive=None,
             ),
             accelerometer=False,
             drivable_area_grid_map=False,
@@ -64,11 +74,7 @@ register(
             max_episode_steps=None,
             neighborhood_vehicle_states=True,
             occupancy_grid_map=False,
-            top_down_rgb=RGB(
-                width=256,
-                height=256,
-                resolution=50 / 256,  # m/pixels
-            ),
+            top_down_rgb=False,
             road_waypoints=False,
             waypoint_paths=Waypoints(lookahead=80),
             signals=False,
