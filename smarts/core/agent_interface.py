@@ -390,6 +390,7 @@ class AgentInterface:
         elif requested_type == AgentType.Laner:  # The lane-following agent
             interface = AgentInterface(
                 waypoint_paths=True,
+                neighborhood_vehicle_states=True,
                 action=ActionSpaceType.Lane,
             )
         # The lane-following agent with speed and relative lane change direction

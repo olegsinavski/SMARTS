@@ -12,7 +12,7 @@ from smarts.core.utils.episodes import episodes
 from smarts.sstudio.scenario_construction import build_scenarios
 from smarts.zoo.agent_spec import AgentSpec
 
-N_AGENTS = 4
+N_AGENTS = 1
 AGENT_IDS = ["Agent %i" % i for i in range(N_AGENTS)]
 
 
@@ -22,11 +22,12 @@ class KeepLaneAgent(Agent):
         return random.choice(val)
 
 
-def main(scenarios, headless, num_episodes, max_episode_steps=None):
+def main(scenarios, headless, num_episodes, max_episode_steps):
     agent_specs = {
         agent_id: AgentSpec(
             interface=AgentInterface.from_type(
-                AgentType.Laner, max_episode_steps=max_episode_steps
+                AgentType.Laner,
+                max_episode_steps=max_episode_steps,
             ),
             agent_builder=KeepLaneAgent,
         )
@@ -57,6 +58,20 @@ def main(scenarios, headless, num_episodes, max_episode_steps=None):
                 agent_id: agents[agent_id].act(agent_obs)
                 for agent_id, agent_obs in observations.items()
             }
+            neighbor_state = observations["Agent 0"].neighborhood_vehicle_states
+            for i in neighbor_state:
+                if i.id == "Leader-007":
+                    leader_state = [i]
+            if leader_state == None or leader_state == []:
+                raise Exception("Leader missing")
+            if leader_state:
+                leader_initial_offset = leader_state[0].lane_position.s
+                ego_initial_offset = observations[
+                    "Agent 0"
+                ].ego_vehicle_state.lane_position.s
+                initial_distance = leader_initial_offset - ego_initial_offset
+                if (8 <= initial_distance <= 18) == False:
+                    raise Exception("Initial distance is not proper")
             observations, rewards, dones, infos = env.step(actions)
             episode.record_step(observations, rewards, dones, infos)
 
@@ -83,6 +98,6 @@ if __name__ == "__main__":
     main(
         scenarios=args.scenarios,
         headless=args.headless,
-        num_episodes=args.episodes,
-        max_episode_steps=args.max_episode_steps,
+        num_episodes=50,
+        max_episode_steps=1,
     )
