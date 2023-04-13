@@ -55,7 +55,7 @@ for name, (social_path, leader_path) in enumerate(route_comb):
             Flow(
                 route=Route(
                     begin=("E0", 0, 0),
-                    end=("E1", r[1], "max"),
+                    end=("E_end", r[1], "max"),
                 ),
                 # Random flow rate, between x and y vehicles per minute.
                 rate=60 * random.uniform(4, 6),
@@ -76,7 +76,7 @@ for name, (social_path, leader_path) in enumerate(route_comb):
                 vehicle_name="Leader-007",
                 route=Route(
                     begin=("E0", 1, 15),
-                    end=("E1", leader_path[1], "max"),
+                    end=("E_end", leader_path[1], "max"),
                 ),
                 depart=19,
                 actor=leader,
