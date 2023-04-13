@@ -18,10 +18,10 @@ from smarts.sstudio.types import (
 )
 
 normal = TrafficActor(
-    name="car", speed=Distribution(sigma=0.2, mean=1.0), depart_speed=5
+    name="car", speed=Distribution(sigma=0.2, mean=1.0), depart_speed=0
 )
 
-leader = TrafficActor(name="Leader-007", depart_speed=5)
+leader = TrafficActor(name="Leader-007", depart_speed=0)
 
 # Social path = (start_lane, end_lane)
 social_paths = [
@@ -72,10 +72,10 @@ for name, (social_path, leader_path) in enumerate(route_comb):
             Trip(
                 vehicle_name="Leader-007",
                 route=Route(
-                    begin=("E0", 1, 0),
+                    begin=("E0", 1, 15),
                     end=("E0", leader_path[1], "max"),
                 ),
-                depart=16,
+                depart=19,
                 actor=leader,
                 vehicle_type="truck",
             ),
