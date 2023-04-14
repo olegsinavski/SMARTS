@@ -7,7 +7,7 @@ import gym
 sys.path.insert(0, str(Path(__file__).parents[2].absolute()))
 from examples.tools.argument_parser import default_argument_parser
 from smarts.core.agent import Agent
-from smarts.core.agent_interface import AgentInterface, AgentType
+from smarts.core.agent_interface import AgentInterface, AgentType, DoneCriteria
 from smarts.core.utils.episodes import episodes
 from smarts.sstudio.scenario_construction import build_scenarios
 from smarts.zoo.agent_spec import AgentSpec
@@ -28,6 +28,7 @@ def main(scenarios, headless, num_episodes, max_episode_steps):
             interface=AgentInterface.from_type(
                 AgentType.Laner,
                 max_episode_steps=max_episode_steps,
+                done_criteria=DoneCriteria(collision=False),
             ),
             agent_builder=KeepLaneAgent,
         )
@@ -70,8 +71,11 @@ def main(scenarios, headless, num_episodes, max_episode_steps):
                     "Agent 0"
                 ].ego_vehicle_state.lane_position.s
                 initial_distance = leader_initial_offset - ego_initial_offset
-                if (8 <= initial_distance <= 18) == False:
+                if (4 <= initial_distance <= 18) == False:
+                    print(initial_distance)
                     raise Exception("Initial distance is not proper")
+                if leader_initial_offset < ego_initial_offset:
+                    raise Exception("ego appears in front of leader")
             observations, rewards, dones, infos = env.step(actions)
             episode.record_step(observations, rewards, dones, infos)
 

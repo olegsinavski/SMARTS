@@ -19,7 +19,7 @@ from smarts.sstudio.types import (
 
 normal = TrafficActor(
     name="car",
-    speed=Distribution(sigma=0.5, mean=1.0),
+    speed=Distribution(sigma=0.2, mean=1.0),
 )
 leader = TrafficActor(
     name="Leader-007",
@@ -47,7 +47,7 @@ for name, routes in enumerate(route_comb):
         flows=[
             Flow(
                 route=Route(
-                    begin=("E0", r[0], 0),
+                    begin=("E0", 0, 0),
                     end=("E0", r[1], "max"),
                 ),
                 # Random flow rate, between x and y vehicles per minute.
