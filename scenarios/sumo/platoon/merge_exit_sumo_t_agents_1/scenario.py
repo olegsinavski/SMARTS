@@ -1,49 +1,61 @@
 import random
-from itertools import combinations
+from itertools import combinations, product
 from pathlib import Path
 
 from smarts.core.colors import Colors
 from smarts.sstudio import gen_scenario
 from smarts.sstudio.types import (
     Distribution,
-    Trip,
+    EndlessMission,
     Flow,
+    MapSpec,
     Route,
     Scenario,
+    ScenarioMetadata,
     Traffic,
     TrafficActor,
-    EndlessMission,
-    ScenarioMetadata,
     TrapEntryTactic,
+    Trip,
 )
 
 normal = TrafficActor(
     name="car",
     speed=Distribution(sigma=0.5, mean=1.0),
 )
+
 leader = TrafficActor(
     name="Leader-007",
     depart_speed=0,
 )
-# flow_name = (start_lane, end_lane,)
-route_opt = [
+
+# Social path = (start_lane, end_lane)
+social_paths = [
     (0, 0),
+    (0, 1),
+    (0, 2),
+    (1, 0),
     (1, 1),
+    (1, 2),
+    (2, 0),
+    (2, 1),
     (2, 2),
 ]
-
-# Traffic combinations = 3C2 + 3C3 = 3 + 1 = 4
-# Repeated traffic combinations = 4 * 100 = 400
-min_flows = 2
-max_flows = 3
-route_comb = [
+min_flows = 3
+max_flows = 5
+social_comb = [
     com
     for elems in range(min_flows, max_flows + 1)
-    for com in combinations(route_opt, elems)
-] * 10
+    for com in combinations(social_paths, elems)
+]
+
+# Leader path = (start_lane, end_lane)
+leader_paths = [0, 1, 2]
+
+# Overall routes
+route_comb = product(social_comb, leader_paths)
 
 traffic = {}
-for name, routes in enumerate(route_comb):
+for name, (social_path, leader_path) in enumerate(route_comb):
     traffic[str(name)] = Traffic(
         engine="SUMO",
         flows=[
@@ -53,7 +65,7 @@ for name, routes in enumerate(route_comb):
                     end=("E3", r[1], "max"),
                 ),
                 # Random flow rate, between x and y vehicles per minute.
-                rate=60 * random.uniform(5, 10),
+                rate=60 * random.uniform(3, 4),
                 # Random flow start time, between x and y seconds.
                 begin=random.uniform(0, 5),
                 # For an episode with maximum_episode_steps=3000 and step
@@ -64,18 +76,17 @@ for name, routes in enumerate(route_comb):
                 actors={normal: 1},
                 randomly_spaced=True,
             )
-            for r in routes
+            for r in social_path
         ],
         trips=[
             Trip(
                 vehicle_name="Leader-007",
                 route=Route(
-                    begin=("E0", 2, 15),
+                    begin=("E0", leader_path, 15),
                     end=("E4", 0, "max"),
                 ),
                 depart=19,
                 actor=leader,
-                vehicle_type="truck",
             ),
         ],
     )
