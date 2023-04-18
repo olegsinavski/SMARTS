@@ -9,7 +9,7 @@ from smarts.sstudio.types import (
     Traffic,
     Route,
     Scenario,
-    ScenarioMetadata
+    ScenarioMetadata,
 )
 
 traffic = Traffic(
@@ -17,7 +17,7 @@ traffic = Traffic(
     flows=[],
     trips=[
         Trip(
-            vehicle_name="Leader-007",
+            vehicle_name="777777",
             route=Route(
                 begin=("E0", 1, 15),
                 end=("E0", 0, "max"),
@@ -35,7 +35,7 @@ scenario = Scenario(
         source=Path(__file__).parent.absolute(),
         lanepoint_spacing=1.0,
     ),
-    scenario_metadata=ScenarioMetadata("Leader-007",Colors.Blue)
+    scenario_metadata=ScenarioMetadata("777777", Colors.Blue),
 )
 
 gen_scenario(

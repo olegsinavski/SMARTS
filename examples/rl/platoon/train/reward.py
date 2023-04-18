@@ -63,7 +63,7 @@ class Reward(gym.Wrapper):
     def _reward(self, obs, env_reward):
         reward = {agent_id: np.float64(0) for agent_id in obs.keys()}
 
-        leader_name = "Leader-007"
+        leader_name = "777777"
         leader = None
         max_agent_steps_completed = 0
         for agent_id, agent_obs in obs.items():
@@ -128,7 +128,6 @@ class Reward(gym.Wrapper):
 
             # Rewards specific to "platooning" and "following" tasks
             if leader and leader_in_rgb:
-
                 # Reward for being in the same lane as the leader
                 if (leader_ind is not None) and (leader_wp_ind[0] in ego_wp_inds):
                     reward[agent_id] += np.float64(1)

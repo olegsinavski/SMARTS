@@ -44,7 +44,7 @@ ego_missions = [
 ]
 
 leader = TrafficActor(
-    name="Leader-007",
+    name="777777",
     depart_speed=0,
 )
 

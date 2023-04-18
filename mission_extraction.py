@@ -68,6 +68,14 @@ def generate_pkl(scenario_dir, vehicle_id):
     recorder.collect(vehicles_with_sensors=vehicle_id, headless=True)
 
 
+generate_pkl(
+    "scenarios/argoverse/platoon/00cba588-11a9-4495-aab9-526a093f41cb_agents_1",
+    vehicle_id=[777777],
+)
+
+exit()
+
+
 def generate_route(scenario_dir):
     # Load pickle file of observations
     datafile = glob.glob(f"{scenario_dir}/*.pkl")[0]
@@ -172,8 +180,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(
-        data_local_path=args.scenario,
-        output_dir=args.output_dir,
-        vehicle_id=args.vehicle_id,
-    )
+    # main(
+    #     data_local_path=args.scenario,
+    #     output_dir=args.output_dir,
+    #     vehicle_id=args.vehicle_id,
+    # )

@@ -24,7 +24,7 @@ normal = TrafficActor(
 )
 
 leader = TrafficActor(
-    name="Leader-007",
+    name="777777",
     depart_speed=0,
 )
 
@@ -80,7 +80,7 @@ for name, (social_path, leader_path) in enumerate(route_comb):
         ],
         trips=[
             Trip(
-                vehicle_name="Leader-007",
+                vehicle_name="777777",
                 route=Route(
                     begin=("E0", leader_path, 15),
                     end=("E4", 0, "max"),
@@ -104,7 +104,7 @@ gen_scenario(
     scenario=Scenario(
         traffic=traffic,
         ego_missions=ego_missions,
-        scenario_metadata=ScenarioMetadata("Leader-007", Colors.Blue),
+        scenario_metadata=ScenarioMetadata("777777", Colors.Blue),
     ),
     output_dir=Path(__file__).parent,
 )
