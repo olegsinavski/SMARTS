@@ -53,7 +53,7 @@ for route in route_comb:
 
 leader_actor = [
     SocialAgentActor(
-        name="Leader-007",
+        name="777777",
         agent_locator="zoo.policies:chase-via-points-agent-v0",
     )
 ]

@@ -156,14 +156,14 @@ def resolve_agent_interface(agent_interface: AgentInterface):
     """
 
     done_criteria = DoneCriteria(
-        collision=True,
+        collision=False,
         off_road=True,
         off_route=False,
         on_shoulder=False,
         wrong_way=False,
         not_moving=False,
         actors_alive=ActorsAliveDoneCriteria(
-            actors_of_interest=(".*Leader-007",),
+            actors_of_interest=(".*777777",),
             strict=True,
         ),
     )

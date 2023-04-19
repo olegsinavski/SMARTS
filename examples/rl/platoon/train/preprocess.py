@@ -34,6 +34,7 @@ class Preprocess(gym.Wrapper):
         return obs
 
     def step(self, action):
+        action = 0
         """Uses the :meth:`step` of the :attr:`env` that can be overwritten to change the returned data."""
         formatted_action = self._format_action.format(action)
         obs, reward, done, info = self.env.step(formatted_action)
