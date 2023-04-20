@@ -144,7 +144,22 @@ output_dir=Path(__file__).parent,
 )
 """
     )
+subprocess.run(["black", f"{scenario_path}/scenario.py"])
+subprocess.run(["code", f"{scenario_path}/scenario.py"])
 
-subprocess.run(
-    ["scl", "run", "--envision", "examples/control/chase_via_points.py", scenario_path]
-)
+input("When done checking the scenario, press any key to continue")
+while True:
+    subprocess.run(
+        [
+            "scl",
+            "run",
+            "--envision",
+            "examples/control/chase_via_points.py",
+            scenario_path,
+        ]
+    )
+    vis = input("Does it look good? Press any key to continue, otherwise press 'n': ")
+    if vis != "n":
+        break
+    else:
+        print("replay the scenario")
