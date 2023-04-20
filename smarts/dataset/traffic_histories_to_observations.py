@@ -360,7 +360,7 @@ class ObservationRecorder:
 
                 if self._output_dir:
                     img = Image.fromarray(rgb, "RGB")
-                    img.save(os.path.join(self._output_dir, f"{t}_{id_}.png"))
+                    # img.save(os.path.join(self._output_dir, f"{t}_{id_}.png"))
 
         # TODO: handle case where neighboring vehicle has lane_index of None too
         for car, car_obs in obs.items():
