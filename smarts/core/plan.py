@@ -40,9 +40,18 @@ class PlanningError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class StartBase:
+    """The base type for Start objects."""
+
+    def resolve(self, scenario, vehicle) -> "Start":
+        """Converts an abstract start into a concrete one."""
+        raise NotImplementedError()
+
+
 # XXX: consider using smarts.core.coordinates.Pose for this
 @dataclass(frozen=True)
-class Start:
+class Start(StartBase):
     """A starting state for a route or mission."""
 
     position: np.ndarray
@@ -64,6 +73,13 @@ class Start:
         )
 
 
+@dataclass(frozen=True)
+class AutomaticStart(StartBase):
+    """Generates a start"""
+
+    pass
+
+
 @dataclass(frozen=True, unsafe_hash=True)
 class Goal:
     """Describes an expected end state for a route or mission."""
@@ -75,6 +91,13 @@ class Goal:
     def is_reached(self, vehicle_state) -> bool:
         """If the goal has been completed."""
         return False
+
+
+@dataclass(frozen=True, unsafe_hash=True)
+class AutomaticGoal(Goal):
+    """A goal that determines an end result from pre-existing vehicle and mission values."""
+
+    pass
 
 
 @dataclass(frozen=True, unsafe_hash=True)

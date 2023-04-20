@@ -30,6 +30,7 @@ from typing import (
     Dict,
     FrozenSet,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -57,6 +58,12 @@ from smarts.core.road_map import RoadMap
 from smarts.core.utils.file import pickle_hash_int
 from smarts.core.utils.id import SocialAgentId
 from smarts.core.utils.math import rotate_cw_around_point
+
+AUTO = "auto"
+
+
+def auto():
+    return AUTO
 
 
 class _SUMO_PARAMS_MODE(IntEnum):
@@ -387,7 +394,7 @@ class Route:
     """
 
     ## road, lane index, offset
-    begin: Tuple[str, int, Any]
+    begin: Union[Tuple[str, int, Any], Literal["auto"]]
     """The (road, lane_index, offset) details of the start location for the route.
 
     road:
@@ -398,7 +405,7 @@ class Route:
         The offset in metres into the lane. Also acceptable\\: "max", "random"
     """
     ## road, lane index, offset
-    end: Tuple[str, int, Any]
+    end: Union[Tuple[str, int, Any], Literal["auto"]]
     """The (road, lane_index, offset) details of the end location for the route.
 
     road:
@@ -635,7 +642,7 @@ class IdEntryTactic(EntryTactic):
 class Mission:
     """The descriptor for an actor's mission."""
 
-    route: Union[RandomRoute, Route]
+    route: Union[RandomRoute, Route, Literal["auto"]]
     """The route for the actor to attempt to follow."""
 
     via: Tuple[Via, ...] = ()
@@ -654,7 +661,7 @@ class Mission:
 class EndlessMission:
     """The descriptor for an actor's mission that has no end."""
 
-    begin: Tuple[str, int, float]
+    begin: Union[Tuple[str, int, float], Literal["auto"]]
     """The (road, lane_index, offset) details of the start location for the route.
 
     road:
@@ -679,7 +686,7 @@ class LapMission:
     """
 
     route: Route
-    """The route for the actor to attempt to follow"""
+    """The route for the actor to attempt to follow. This cannot have automatic values."""
     num_laps: int
     """The amount of times to repeat the mission"""
     via: Tuple[Via, ...] = ()
@@ -688,6 +695,9 @@ class LapMission:
     """The earliest simulation time that this mission starts"""
     entry_tactic: Optional[EntryTactic] = None
     """A specific tactic the mission should employ to start the mission"""
+
+    def __post_init__(self):
+        assert self.route.begin is not AUTO and self.route.end is not AUTO
 
 
 @dataclass(frozen=True)
