@@ -31,7 +31,7 @@ from smarts.core.agent_interface import AgentInterface, DoneCriteria
 from smarts.core.controllers import ActionSpaceType
 from smarts.core.coordinates import Heading, Point
 from smarts.core.plan import EndlessGoal, Goal, Mission, PositionalGoal, Start
-from smarts.env.gymnasium.wrappers.metrics import Metrics
+from smarts.env.gymnasium.wrappers.metric.metrics import Metrics
 from smarts.zoo.agent_spec import AgentSpec
 
 
@@ -139,7 +139,7 @@ def test_init(make_env):
     env = Metrics(env=make_env)
 
     # Verify blocked access to underlying private variables.
-    for elem in ["_scen", "_road_map", "_records"]:
+    for elem in ["_scen", "_road_map", "_records", "smarts"]:
         with pytest.raises(AttributeError):
             getattr(env, elem)
 
@@ -200,7 +200,6 @@ def test_end_in_off_road(make_env):
     assert counts.goals == 0
     assert counts.episodes == 1
     assert counts.steps == 3
-    assert counts.max_steps == env.agent_interfaces[agent_name].max_episode_steps
 
 
 @pytest.mark.parametrize(
@@ -295,14 +294,14 @@ def test_records_and_scores(make_env):
     #   env.score() is only callable after >=1 episode. Hence step through 1 episode.
     env = Metrics(env=make_env)
     obs, _ = env.reset()
-    agent_name = next(iter(obs.keys()))
-    for _ in range(env.agent_interfaces[agent_name].max_episode_steps):
+    terminated = {"__all__": False}
+    while not terminated["__all__"]:
         actions = {
             agent_name: np.append(
                 agent_obs["ego_vehicle_state"]["position"][:2], [0, 0.1]
             )
             for agent_name, agent_obs in obs.items()
         }
-        obs, _, _, _, _ = env.step(actions)
+        obs, _, terminated, _, _ = env.step(actions)
     env.records()
     env.score()
