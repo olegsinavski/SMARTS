@@ -18,23 +18,22 @@ scenario_id = data_path.split("/")[-2]
 
 # Copy data to smarts directory
 subprocess.check_output(
-    f"cp -R {data_path} /root/driving-smarts-2.competition-scenarios/t3/dataset",
+    f"cp -R {data_path} /root/driving-smarts-2.competition-scenarios/dataset/",
     shell=True,
 )
 # Create scenario file
 scenario_path = (
-    f"/root/driving-smarts-2.competition-scenarios/t3/test/{scenario_id}_agents_1"
+    f"/root/driving-smarts-2.competition-scenarios/t2/temp/{scenario_id}_agents_1"
 )
 subprocess.check_output(f"mkdir -p {scenario_path}", shell=True)
 
-filepath = Path(f"{scenario_path}/scenario.py")
+filepath = Path(scenario_path) / "scenario.py"
 with filepath.open("w", encoding="utf-8") as f:
     f.write(
         f"""from pathlib import Path
 
 from smarts.sstudio import gen_scenario
 from smarts.sstudio import types as t
-from smarts.core.colors import Colors
 
 # scenario_path is a directory with the following structure:
 # /path/to/dataset/{{scenario_id}}
@@ -43,7 +42,7 @@ from smarts.core.colors import Colors
 
 PATH = "dataset"
 scenario_id = "{scenario_id}"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
-scenario_path = Path(__file__).resolve().parents[2] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
+scenario_path = Path(__file__).resolve().parents[3] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 traffic_histories = [
 t.TrafficHistoryDataset(
@@ -53,14 +52,12 @@ t.TrafficHistoryDataset(
 )
 ]
 # ego_mission = [t.EndlessMission()]
-# ego_id = None
 
 gen_scenario(
 t.Scenario(
     # ego_missions=ego_mission,
     map_spec=t.MapSpec(source=f"{{scenario_path}}", lanepoint_spacing=1.0),
     traffic_histories=traffic_histories,
-    scenario_metadata=t.ScenarioMetadata("16249", Colors.Blue),
 ),
 output_dir=Path(__file__).parent,
 )
@@ -108,7 +105,20 @@ print(
 print(
     f'end=("{last_state.road_id}", {last_state.lane_index}, {round(last_state.lane_position.s, 1)})'
 )
-
+save_to = input("Which folder this scenario should be saved to?")
+subprocess.run(
+    [
+        "rsync",
+        "-a",
+        scenario_path,
+        f"/root/driving-smarts-2.competition-scenarios/t2/test/{save_to}",
+    ]
+)
+subprocess.run(
+    "rm -rf /root/driving-smarts-2.competition-scenarios/t2/temp/*", shell=True
+)
+scenario_path = f"/root/driving-smarts-2.competition-scenarios/t2/test/{save_to}/{scenario_id}_agents_1"
+filepath = Path(scenario_path) / "scenario.py"
 # write in the mission route
 with filepath.open("w", encoding="utf-8") as f:
     f.write(
@@ -116,7 +126,6 @@ with filepath.open("w", encoding="utf-8") as f:
 
 from smarts.sstudio import gen_scenario
 from smarts.sstudio import types as t
-from smarts.core.colors import Colors
 
 # scenario_path is a directory with the following structure:
 # /path/to/dataset/{{scenario_id}}
@@ -125,7 +134,7 @@ from smarts.core.colors import Colors
 
 PATH = "dataset"
 scenario_id = "{scenario_id}"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
-scenario_path = Path(__file__).resolve().parents[2] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
+scenario_path = Path(__file__).resolve().parents[4] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 traffic_histories = [
 t.TrafficHistoryDataset(
@@ -134,25 +143,20 @@ t.TrafficHistoryDataset(
     input_path=scenario_path,
 )
 ]
-ego_mission = [t.EndlessMission(begin=("{first_state.road_id}", {first_state.lane_index}, {round(first_state.lane_position.s, 1)}))]
-
-leader_id = None
+ego_mission = [t.Mission(route=t.Route(begin=("{first_state.road_id}", {first_state.lane_index}, {round(first_state.lane_position.s, 1)}), end=("{last_state.road_id}", {last_state.lane_index}, {round(last_state.lane_position.s, 1)})))]
 
 gen_scenario(
 t.Scenario(
     ego_missions=ego_mission,
     map_spec=t.MapSpec(source=f"{{scenario_path}}", lanepoint_spacing=1.0),
     traffic_histories=traffic_histories,
-    scenario_metadata=t.ScenarioMetadata(leader_id, Colors.Blue),
 ),
 output_dir=Path(__file__).parent,
 )
 """
     )
-subprocess.run(["black", f"{scenario_path}/scenario.py"])
+subprocess.run(["black", filepath])
 subprocess.run(["code", f"{scenario_path}/scenario.py"])
-
-input("When done checking the scenario, press any key to continue")
 while True:
     subprocess.run(
         [

@@ -18,7 +18,7 @@ scenario_id = data_path.split("/")[-2]
 
 # Copy data to smarts directory
 subprocess.check_output(
-    f"cp -R {data_path} /root/driving-smarts-2.competition-scenarios/t1/dataset/",
+    f"cp -R {data_path} /root/driving-smarts-2.competition-scenarios/dataset/",
     shell=True,
 )
 # Create scenario file
@@ -42,7 +42,7 @@ from smarts.sstudio import types as t
 
 PATH = "dataset"
 scenario_id = "{scenario_id}"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
-scenario_path = Path(__file__).resolve().parents[2] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
+scenario_path = Path(__file__).resolve().parents[3] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 traffic_histories = [
 t.TrafficHistoryDataset(
@@ -121,7 +121,7 @@ from smarts.sstudio import types as t
 
 PATH = "dataset"
 scenario_id = "{scenario_id}"  # e.g. "0000b6ab-e100-4f6b-aee8-b520b57c0530"
-scenario_path = Path(__file__).resolve().parents[2] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
+scenario_path = Path(__file__).resolve().parents[3] / PATH / scenario_id # e.g. Path("/home/user/argoverse/train/") / scenario_id
 
 traffic_histories = [
 t.TrafficHistoryDataset(
@@ -130,7 +130,7 @@ t.TrafficHistoryDataset(
     input_path=scenario_path,
 )
 ]
-ego_mission = [t.Mission(begin=("{first_state.road_id}", {first_state.lane_index}, {round(first_state.lane_position.s, 1)}), end=("{last_state.road_id}", {last_state.lane_index}, {round(last_state.lane_position.s, 1)})]
+ego_mission = [t.Mission(route=t.Route(begin=("{first_state.road_id}", {first_state.lane_index}, {round(first_state.lane_position.s, 1)}), end=("{last_state.road_id}", {last_state.lane_index}, {round(last_state.lane_position.s, 1)})))]
 
 gen_scenario(
 t.Scenario(
