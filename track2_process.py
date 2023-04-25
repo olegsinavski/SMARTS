@@ -157,6 +157,7 @@ output_dir=Path(__file__).parent,
     )
 subprocess.run(["black", filepath])
 subprocess.run(["code", f"{scenario_path}/scenario.py"])
+input("Press any key to continue...")
 while True:
     subprocess.run(
         [
