@@ -65,10 +65,10 @@ static_bubbles = [
 
 gen_scenario(
     t.Scenario(
-        traffic={"basic": traffic},
-        social_agent_missions={
-            "all": ([laner_actor], [t.Mission(route=t.RandomRoute())])
-        },
+        # traffic={"basic": traffic},
+        # social_agent_missions={
+        #     "all": ([laner_actor], [t.Mission(route=t.RandomRoute())])
+        # },
         bubbles=[*travelling_bubbles, *static_bubbles],
     ),
     output_dir=Path(__file__).parent,
