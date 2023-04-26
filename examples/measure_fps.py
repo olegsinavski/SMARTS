@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 
 import gym
+import time
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1].absolute()))
 from examples.tools.argument_parser import default_argument_parser
@@ -12,81 +14,63 @@ from smarts.core.utils.episodes import episodes
 from smarts.sstudio.scenario_construction import build_scenarios
 from smarts.zoo.agent_spec import AgentSpec
 
-N_AGENTS = 3
-AGENT_IDS = ["Agent_%i" % i for i in range(N_AGENTS)]
 
+def measure_fps(n_agent):
+    scenarios = [
+        str(Path(__file__).absolute().parents[1] / "scenarios" / "sumo" / "minicity")
+    ]
 
-class ChaseViaPointsAgent(Agent):
-    def act(self, obs: Observation):
-        if (
-            len(obs.via_data.near_via_points) < 1
-            or obs.ego_vehicle_state.road_id != obs.via_data.near_via_points[0].road_id
-        ):
-            return (obs.waypoint_paths[0][0].speed_limit, 0)
+    agent_ids = ["Agent_%i" % i for i in range(n_agent)]
 
-        nearest = obs.via_data.near_via_points[0]
-        if nearest.lane_index == obs.ego_vehicle_state.lane_index:
-            return (nearest.required_speed, 0)
-
-        return (
-            nearest.required_speed,
-            1 if nearest.lane_index > obs.ego_vehicle_state.lane_index else -1,
-        )
-
-
-def main(scenarios, headless, num_episodes, max_episode_steps=None):
     agent_specs = {
         agent_id: AgentSpec(
             interface=AgentInterface.from_type(
                 AgentType.LanerWithSpeed,
-                max_episode_steps=max_episode_steps,
+                max_episode_steps=None,
             ),
-            agent_builder=ChaseViaPointsAgent,
+            agent_builder=Agent,
         )
-        for agent_id in AGENT_IDS
+        for agent_id in agent_ids
     }
 
     env = gym.make(
         "smarts.env:hiway-v0",
         scenarios=scenarios,
         agent_specs=agent_specs,
-        headless=headless,
+        headless=True,
         sumo_headless=True,
     )
-
-    for episode in episodes(n=num_episodes):
-        agents = {
-            agent_id: agent_spec.build_agent()
-            for agent_id, agent_spec in agent_specs.items()
+    print("Resetting..")
+    observations = env.reset()
+    action = (0., 0, 0)
+    timestamps = []
+    num_agents = []
+    for i in range(100):
+        actions = {
+            agent_id: action
+            for agent_id, agent_obs in observations.items()
         }
-        observations = env.reset()
-        episode.record_scenario(env.scenario_log)
+        observations, rewards, dones, infos = env.step(actions)
+        num_agents.append(len(observations.keys()))
+        timestamps.append(time.time())
 
-        dones = {"__all__": False}
-        while not dones["__all__"]:
-            actions = {
-                agent_id: agents[agent_id].act(agent_obs)
-                for agent_id, agent_obs in observations.items()
-            }
-            observations, rewards, dones, infos = env.step(actions)
-            episode.record_step(observations, rewards, dones, infos)
+    dt = np.median(np.diff(timestamps))
+    mean_agents_count = np.mean(num_agents)
+    print("FPS:", 1. / dt, " Alive agents:", mean_agents_count)
 
     env.close()
 
 
 if __name__ == "__main__":
     parser = default_argument_parser("chase-via-points")
+    parser.add_argument(
+        "n_agent",
+        help="Number of agents",
+        type=int,
+    )
     args = parser.parse_args()
 
-    if not args.scenarios:
-        args.scenarios = [
-            str(Path(__file__).absolute().parents[1] / "scenarios" / "sumo" / "loop")
-        ]
 
-    build_scenarios(scenarios=args.scenarios)
-
-    main(
-        scenarios=args.scenarios,
-        headless=args.headless,
-        num_episodes=args.episodes,
+    measure_fps(
+        n_agent=args.n_agent
     )

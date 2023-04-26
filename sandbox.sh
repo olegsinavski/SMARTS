@@ -9,7 +9,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # Build parent image
 ./docker_mlgl/build.sh mlgl_sandbox $PYTHON_VERSION
 docker build -t $PROJECT_NAME $SCRIPT_DIR
-./docker_mlgl/start_sandbox.sh $PROJECT_NAME $SCRIPT_DIR
+./start_sandbox.sh $PROJECT_NAME $SCRIPT_DIR
 
 SANDBOX_IP="$(docker inspect -f '{{ .NetworkSettings.IPAddress }}' $PROJECT_NAME)"
 ssh docker@$SANDBOX_IP
