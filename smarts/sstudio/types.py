@@ -21,7 +21,7 @@ import collections.abc as collections_abc
 import logging
 import math
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import IntEnum
 from sys import maxsize
 from typing import (
@@ -306,7 +306,7 @@ class TrafficActor(Actor):
     @property
     def id(self) -> str:
         """The identifier tag of the traffic actor."""
-        return "actor-{}-{}".format(self.name, hash(self))
+        return "{}-{}".format(self.name, str(hash(self))[:6])
 
 
 @dataclass(frozen=True)
@@ -420,10 +420,10 @@ class Route:
     @property
     def id(self) -> str:
         """The unique id of this route."""
-        return "route-{}-{}-{}-".format(
+        return "{}-{}-{}".format(
             "_".join(map(str, self.begin)),
             "_".join(map(str, self.end)),
-            pickle_hash_int(self),
+            str(hash(self))[:6],
         )
 
     @property
@@ -485,9 +485,9 @@ class Flow:
     @property
     def id(self) -> str:
         """The unique id of this flow."""
-        return "flow-{}-{}-".format(
+        return "{}-{}".format(
             self.route.id,
-            str(pickle_hash_int(sorted(self.actors.items(), key=lambda a: a[0].name))),
+            str(hash(self))[:6],
         )
 
     def __hash__(self):
@@ -518,7 +518,15 @@ class Trip:
         object.__setattr__(
             self,
             "actor",
-            TrafficActor(name=self.vehicle_name, vehicle_type=self.vehicle_type),
+            (
+                replace(
+                    self.actor, name=self.vehicle_name, vehicle_type=self.vehicle_type
+                )
+                if self.actor is not None
+                else TrafficActor(
+                    name=self.vehicle_name, vehicle_type=self.vehicle_type
+                )
+            ),
         )
 
     @property
@@ -589,14 +597,14 @@ class Traffic:
 
 @dataclass(frozen=True)
 class EntryTactic:
-    """The tactic that the simulation should use to acquire a vehicle for an actor."""
+    """The tactic that the simulation should use to acquire a vehicle for an agent."""
 
     pass
 
 
 @dataclass(frozen=True)
 class TrapEntryTactic(EntryTactic):
-    """An entry tactic that repurposes a pre-existing vehicle for an actor."""
+    """An entry tactic that repurposes a pre-existing vehicle for an agent."""
 
     wait_to_hijack_limit_s: float
     """The amount of seconds a hijack will wait to get a vehicle before defaulting to a new vehicle"""
@@ -606,6 +614,21 @@ class TrapEntryTactic(EntryTactic):
     """The prefixes of vehicles to avoid hijacking"""
     default_entry_speed: Optional[float] = None
     """The speed that the vehicle starts at when the hijack limit expiry emits a new vehicle"""
+
+
+@dataclass(frozen=True)
+class IdEntryTactic(EntryTactic):
+    """An entry tactic which repurposes a pre-existing actor for an agent. Selects that actor by id."""
+
+    actor_id: str
+    """The id of the actor to take over."""
+
+    patience: float = 0.1
+    """Defines the amount of time this tactic will wait for an actor."""
+
+    def __post_init__(self):
+        assert isinstance(self.actor_id, str)
+        assert isinstance(self.patience, (float, int))
 
 
 @dataclass(frozen=True)
@@ -1091,13 +1114,14 @@ class Scenario:
     """Specifies the road map."""
     traffic: Optional[Dict[str, Traffic]] = None
     """Background traffic vehicle specification."""
-    ego_missions: Optional[Sequence[Mission]] = None
+    ego_missions: Optional[Sequence[Union[Mission, EndlessMission]]] = None
     """Ego agent missions."""
     social_agent_missions: Optional[
         Dict[str, Tuple[Sequence[SocialAgentActor], Sequence[Mission]]]
     ] = None
     """
-    Every dictionary item ``{group: (actors, missions)}`` gets run simultaneously.
+    Actors must have unique names regardless of which group they are assigned to.
+    Every dictionary item ``{group: (actors, missions)}`` gets selected from simultaneously.
     If actors > 1 and missions = 0 or actors = 1 and missions > 0, we cycle
     through them every episode. Otherwise actors must be the same length as 
     missions.
@@ -1110,3 +1134,21 @@ class Scenario:
     """Traffic vehicles trajectory dataset to be replayed."""
     scenario_metadata: Optional[ScenarioMetadata] = None
     """"Scenario data that does not have influence on simulation."""
+
+    def __post_init__(self):
+        def _get_name(item):
+            return item.name
+
+        if self.social_agent_missions is not None:
+            groups = [k for k in self.social_agent_missions]
+            for group, (actors, _) in self.social_agent_missions.items():
+                for o_group in groups:
+                    if group == o_group:
+                        continue
+                    if intersection := set.intersection(
+                        set(map(_get_name, actors)),
+                        map(_get_name, self.social_agent_missions[o_group][0]),
+                    ):
+                        raise ValueError(
+                            f"Social agent mission groups `{group}`|`{o_group}` have overlapping actors {intersection}"
+                        )

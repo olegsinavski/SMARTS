@@ -29,14 +29,13 @@ import numpy as np
 from cached_property import cached_property
 
 from smarts.core.agent_interface import AgentInterface
-from smarts.core.events import Events
 from smarts.core.observations import Observation, SignalObservation, VehicleObservation
 from smarts.core.plan import Mission
 from smarts.core.road_map import Waypoint
 
 _LIDAR_SHP = 300
-_NEIGHBOR_SHP = 10
-_WAYPOINT_SHP = (4, 20)
+_NEIGHBOR_SHP = 50
+_WAYPOINT_SHP = (12, 80)
 _SIGNALS_SHP = (3,)
 _POSITION_SHP = (3,)
 _WAYPOINT_NAME_LIMIT = 50
@@ -185,7 +184,6 @@ def _format_signals(signals: List[SignalObservation]):
 def _format_neighborhood_vehicle_states(
     neighborhood_vehicle_states: List[VehicleObservation],
 ):
-    ## TODO MTA: Add in the vehicle ids
     des_shp = _NEIGHBOR_SHP
     rcv_shp = len(neighborhood_vehicle_states)
     pad_shp = 0 if des_shp - rcv_shp < 0 else des_shp - rcv_shp
@@ -574,6 +572,13 @@ distance_travelled_space_format = StandardSpaceFormat(
 )
 
 
+events_actors_alive_done_space_format = StandardSpaceFormat(
+    lambda obs: np.int64(obs.events.actors_alive_done),
+    lambda _: True,
+    "actors_alive_done",
+    _DISCRETE2_SPACE,
+)
+
 events_agents_alive_done_space_format = StandardSpaceFormat(
     lambda obs: np.int64(obs.events.agents_alive_done),
     lambda _: True,
@@ -841,6 +846,7 @@ ego_vehicle_state_space_format = StandardCompoundSpaceFormat(
 
 events_space_format = StandardCompoundSpaceFormat(
     space_generators=[
+        events_actors_alive_done_space_format,
         events_agents_alive_done_space_format,
         events_collisions_space_format,
         events_not_moving_space_format,
@@ -937,7 +943,7 @@ class ObservationSpacesFormatter:
                     AgentInterface, else absent. shape=(3,). dtype=np.float32.
                 "linear_velocity":
                     Vehicle velocity in x, y, and z axes. shape=(3,). dtype=np.float32.
-                "pos":
+                "position":
                     Coordinate of the center of the vehicle bounding box's bottom plane.
                     shape=(3,). dtype=np.float64.
                 "speed":
@@ -951,6 +957,8 @@ class ObservationSpacesFormatter:
 
             A dictionary of event markers.
             "events": dict({
+                "actors_alive_done":
+                    1 if `DoneCriteria.actors_alive` is triggered, else 0.
                 "agents_alive_done":
                     1 if `DoneCriteria.agents_alive` is triggered, else 0.
                 "collisions":
@@ -989,7 +997,7 @@ class ObservationSpacesFormatter:
 
             Mission details for the ego agent.
             "mission": dict({
-                "goal_pos":
+                "goal_position":
                     Achieve goal by reaching the end position. Defaults to np.array([0,0,0])
                     for no mission. shape=(3,). dtype=np.float64.
             })
